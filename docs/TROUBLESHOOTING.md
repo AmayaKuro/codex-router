@@ -25,7 +25,7 @@ Neither command prints credential values. Repair refuses unknown router owners.
 
 ## New native models (GPT-6 Astra, GPT-7, etc.)
 
-**Uninstall is never required** to see new OpenAI/Codex native models. While its merged catalog is installed, the router conditionally refreshes the signed-in account catalog itself, watches the resulting model fingerprint plus a lightweight fingerprint of the resolved Codex executable, and republishes when either source changes. A failed or unavailable account request leaves the prior cache untouched and falls back to that cache plus the bundled catalog. Discovery-disabled installs make no account request. Drift is checked on startup and periodically while the router stays running.
+**Uninstall is never required** to see new OpenAI/Codex native models. While its merged catalog is installed, the router conditionally refreshes the signed-in account catalog itself, watches the resulting model fingerprint plus a lightweight fingerprint of the resolved Codex executable, and republishes when either source changes. The account catalog decides which native models are available; the bundled catalog only fills missing schema metadata. A failed or unavailable account request leaves the prior cache untouched. The full bundled list is used only when no valid account catalog exists, including discovery-disabled installs, which make no account request. Drift is checked on startup and periodically while the router stays running.
 
 The periodic check defaults to five minutes. To check once per day, set
 `CODEX_ROUTER_NATIVE_CATALOG_POLL_INTERVAL_MS=86400000`. Accepted values are

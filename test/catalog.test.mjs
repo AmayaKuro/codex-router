@@ -1028,6 +1028,7 @@ test("fingerprint drift from new native model triggers automatic recapture", () 
   const oldCaptured = {
     captured_with: "codex-cli 0.146.1",
     native_source_fingerprint: oldFingerprint,
+    native_catalog_policy: "account-availability",
     models: [oldNative],
   };
   
@@ -1102,6 +1103,7 @@ test("native catalog cache is reusable only for the codex build that captured it
   const captured = {
     captured_with: "codex-cli 0.142.5",
     native_source_fingerprint: "account-a",
+    native_catalog_policy: "account-availability",
     models: [template],
   };
 
@@ -1131,6 +1133,7 @@ test("native catalog cache is invalidated when the Codex binary changes without 
     captured_with: "codex-cli 0.153.3",
     native_source_fingerprint: "account-a",
     native_binary_fingerprint: "binary-a",
+    native_catalog_policy: "account-availability",
     models: [template],
   };
 
@@ -1154,7 +1157,22 @@ test("native catalog cache is invalidated when the Codex binary changes without 
   );
 });
 
-test("native catalog merge preserves account visibility and bundled-only models", () => {
+test("native catalog captures predating account availability are rebuilt", () => {
+  assert.equal(
+    nativeCatalogIsReusable(
+      {
+        captured_with: "codex-cli 0.166.0",
+        native_source_fingerprint: "account-a",
+        models: [template],
+      },
+      "codex-cli 0.166.0",
+      "account-a",
+    ),
+    false,
+  );
+});
+
+test("native catalog merge preserves account visibility and backfills bundled metadata", () => {
   const accountMini = {
     slug: "gpt-mini",
     visibility: "list",
@@ -1195,11 +1213,10 @@ test("native catalog merge preserves account visibility and bundled-only models"
       model_messages: { instructions_template: "spark instructions" },
       base_instructions: "spark instructions",
     },
-    { slug: "gpt-bundled-only", visibility: "list" },
   ]);
 });
 
-test("an account catalog can be authoritative about model availability", () => {
+test("the account catalog is authoritative about model availability by default", () => {
   const merged = mergeNativeCatalogs(
     { models: [{ slug: "gpt-free", visibility: "list" }] },
     {
@@ -1208,9 +1225,15 @@ test("an account catalog can be authoritative about model availability", () => {
         { slug: "gpt-plus-only", visibility: "list" },
       ],
     },
-    { includeBundledOnly: false },
   );
   assert.deepEqual(merged.models, [{ slug: "gpt-free", visibility: "list" }]);
+});
+
+test("native catalog merge retains bundled fallback without a valid account catalog", () => {
+  const bundled = { models: [{ slug: "gpt-bundled", visibility: "list" }] };
+  for (const account of [undefined, {}, { models: [] }]) {
+    assert.deepEqual(mergeNativeCatalogs(account, bundled), bundled);
+  }
 });
 
 test("native catalog merge never loses non-empty bundled metadata", () => {
@@ -1734,6 +1757,19 @@ test("catalog publication assigns login-free slots only to selected routes and p
     );
     assert.equal(signedIn.find((model) => model.slug === "gpt-5.6-sol").display_name, "GPT-5.6 Sol");
     assert.equal(signedIn.find((model) => model.slug === "gpt-5.6-sol").visibility, "list");
+    assert.equal(readFileSync(path.join(codexHome, "config.toml"), "utf8"), config);
+
+    writeFileSync(path.join(codexHome, "models_cache.json"), JSON.stringify({
+      models: [{ ...template, slug: "gpt-free", visibility: "list" }],
+    }));
+    const accountOnly = publish("0");
+    assert.deepEqual(
+      accountOnly.filter((model) => !model.slug.includes("/")).map((model) => model.slug),
+      ["gpt-free"],
+      "bundled models unavailable to the account must not be published",
+    );
+    assert.equal(accountOnly.find((model) => model.slug === selectedSlug).visibility, "list");
+    assert.equal(accountOnly.find((model) => model.slug === paidSlug).visibility, "hide");
     assert.equal(readFileSync(path.join(codexHome, "config.toml"), "utf8"), config);
   } finally {
     rmSync(codexHome, { recursive: true, force: true });

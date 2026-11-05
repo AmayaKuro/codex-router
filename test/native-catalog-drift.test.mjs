@@ -65,6 +65,10 @@ test("drift detection triggers republish with new arbitrary native in merged out
     };
     writeFileSync(NATIVE_CATALOG_PATH, JSON.stringify(storedCatalog));
 
+    assert.equal(nativeCatalogDriftDetected(), true, "older captures need account-availability migration");
+    storedCatalog.native_catalog_policy = "account-availability";
+    writeFileSync(NATIVE_CATALOG_PATH, JSON.stringify(storedCatalog));
+
     // With matching fingerprints, no drift should be detected
     assert.equal(nativeCatalogDriftDetected(), false, "no drift when fingerprints match");
 

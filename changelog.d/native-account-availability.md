@@ -1,0 +1,1 @@
+- **Native model pickers now respect the signed-in ChatGPT account's model availability.** Bundled Codex models absent from a valid account catalog are no longer added automatically, while bundled schema metadata and the no-account fallback remain available. Older captures are rebuilt automatically when an account cache is present.

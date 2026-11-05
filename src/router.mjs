@@ -59,6 +59,7 @@ import {
   writeStreamErrorEvent,
   zstdFrameContentSize,
 } from "./http-utils.mjs";
+import { createStartupDependencyGate, parseStartupHoldMs } from "./startup-dependency-gate.mjs";
 import {
   EmptyCompletionGuard,
   EmptyCompletionTerminalGuard,
@@ -130,7 +131,7 @@ import {
 import { providerPoolRegistry } from "./provider-ws-pool.mjs";
 import { createHealthCache } from "./health-cache.mjs";
 import { discoveryDisabled } from "./discovery-mode.mjs";
-import { readNativeAliases } from "./native-alias.mjs";
+import { readNativeAliases, readNativeAliasSnapshot, resolveNativeAliasRoute } from "./native-alias.mjs";
 import { nativeContextVariantBase } from "./native-context-variants.mjs";
 import { normalizeNativeReasoningEffort } from "./native-reasoning-effort.mjs";
 import { foldResponsesSse, nativeInputAsList } from "./native-buffered-response.mjs";
@@ -4080,10 +4081,12 @@ async function buildRoutedRequest({ request, payload, route, agedInput }) {
   // LiteLLM's Responses bridge derives its own effort from `reasoning` whenever
   // the client sent one -- and Codex always does -- then that derived value
   // overwrites anything flat the router set, so a flat-only override never
-  // reaches the provider. Set both: `reasoning.effort` is what actually
-  // travels, and the flat field is what a bare chat-completions gateway reads.
+  // reaches the provider. Chat Completions gateways still need the flat
+  // spelling, but a Responses-native route must carry only the nested one:
+  // the API forwarder rejects requests containing both aliases before upstream.
   if (childEffort) {
-    if (!deepSeekResponses) routed.reasoning_effort = childEffort;
+    if (chatCompletionsProvider && !deepSeekResponses) routed.reasoning_effort = childEffort;
+    else delete routed.reasoning_effort;
     routed.reasoning = { ...(routed.reasoning || {}), effort: childEffort };
   }
   normalizeAutoToolChoice(routed, route);
@@ -4673,15 +4676,41 @@ async function handleResponses(request, response, requestUrl) {
     }
     controller.signal.throwIfAborted();
     requestedModel = typeof payload.model === "string" ? payload.model : "";
-    if (COMPATIBILITY_DISABLED_MODELS.has(requestedModel) ||
-        COMPATIBILITY_DISABLED_MODELS.has(readNativeAliases()[requestedModel])) {
+    if (COMPATIBILITY_DISABLED_MODELS.has(requestedModel)) {
+      writeJson(response, 409, compatibilityLayerError(requestedModel));
+      return;
+    }
+    const directRoute = MODEL_BY_SLUG.get(requestedModel);
+    let alias = { kind: "native" };
+    if (!directRoute && requestedModel && !isProviderPrefixedSlug(requestedModel)) {
+      let snapshot;
+      try {
+        snapshot = readNativeAliasSnapshot();
+      } catch {
+        writeJson(response, 503, { error: {
+          type: "native_alias_state_unavailable",
+          message: "Native alias state is unavailable. Repair it before retrying this model.",
+        } });
+        return;
+      }
+      alias = resolveNativeAliasRoute(requestedModel, snapshot, (target) => {
+        const loaded = MODEL_BY_SLUG.get(target);
+        return loaded && routeProviderEnabled(loaded.provider) ? loaded : undefined;
+      });
+      if (alias.kind === "withdrawn") {
+        writeJson(response, 409, { error: {
+          type: "native_alias_unavailable",
+          message: "This native alias is no longer available. Refresh the model picker and select an available model.",
+        } });
+        return;
+      }
+    }
+    if (COMPATIBILITY_DISABLED_MODELS.has(alias.target)) {
       writeJson(response, 409, compatibilityLayerError(requestedModel));
       return;
     }
     markResponsesStream(response, { model: requestedModel });
-    let registeredRoute =
-      MODEL_BY_SLUG.get(requestedModel) ??
-      MODEL_BY_SLUG.get(readNativeAliases()[requestedModel]);
+    let registeredRoute = directRoute ?? alias.route;
     // A provider-prefixed slug with no route is a routed model this process
     // never loaded -- added to user-models.json after startup, or skipped at
     // load as invalid -- and never native GPT traffic: no native slug contains
@@ -4770,6 +4799,7 @@ async function handleResponses(request, response, requestUrl) {
     }
     let functionTools;
     if (route) {
+      await holdForStartup(routeExecution(route, { providerForModel }).services, controller.signal);
       // History already poisoned by #1066 carries a call with empty arguments
       // whose only output is Codex's own parse failure; it never ran, so it is
       // omitted instead of refusing every later turn.
@@ -5130,7 +5160,7 @@ async function handleResponses(request, response, requestUrl) {
         // true content rather than a receipt.
         if (!compactV1 && !compactV2) {
           const aged = await ageToolResultsWithRecovery(native.input, {
-            tools: toolResultReadbackTools(payload),
+            tools: toolResultReadbackTools(payload, { native: true }),
             scope: toolResultRecoveryScope(threadIdFromHeaders(request.headers), payload),
             enabled: nativeToolResultAgingEnabled(),
           });
@@ -6761,6 +6791,7 @@ async function handleEmbeddings(request, response, requestUrl) {
     const headers = routedHeaders();
     const requestId = safeForwardedRequestId(request.headers["x-request-id"]);
     if (requestId) headers["X-Request-Id"] = requestId;
+    await holdForStartup(["api"], controller.signal);
     const upstream = await fetch(
       `${API_BASE}/embeddings${nativeRequestSearch(requestUrl)}`,
       {
@@ -6899,6 +6930,7 @@ async function handleDecisions(request, response, requestUrl) {
     const headers = routedHeaders();
     const requestId = safeForwardedRequestId(request.headers["x-request-id"]);
     if (requestId) headers["X-Request-Id"] = requestId;
+    await holdForStartup(["api"], controller.signal);
     const upstream = await fetch(
       `${API_BASE}/decisions${nativeRequestSearch(requestUrl)}`,
       {
@@ -7089,6 +7121,35 @@ async function handleRequest(request, response) {
   writeJson(response, 404, {
     error: { type: "proxy_route_not_found", message: "Unsupported router route." },
   });
+}
+
+// Keyed by the service names `routeExecution` reports for a route.
+const STARTUP_DEPENDENCY_HEALTH = new Map([
+  ["kimi", OAUTH_HEALTH],
+  ["api", API_HEALTH],
+  ["grok", GROK_OAUTH_HEALTH],
+  ["gateway", GATEWAY_HEALTH],
+  ["antigravity", loopback(PORTS.antigravityOauth, "/health")],
+  ["devin", loopback(PORTS.devinCli, "/health")],
+]);
+
+const startupDependencyGate = createStartupDependencyGate({
+  holdMs: parseStartupHoldMs(process.env.CODEX_ROUTER_STARTUP_HOLD_MS),
+  dependencies: runtimeDependencyRequirements({ includePendingActivation: false }).services
+    .filter((service) => STARTUP_DEPENDENCY_HEALTH.has(service)),
+  // Probes directly rather than through `serviceHealth`, whose cache would keep
+  // a refusal from a moment ago and hold a turn up to one TTL past the gateway
+  // coming up.
+  isReady: async (service) => (await probeService(STARTUP_DEPENDENCY_HEALTH.get(service))).reachable,
+  log: (message) => console.error(`[codex-router] ${message}`),
+});
+
+async function holdForStartup(dependencies, signal) {
+  await startupDependencyGate.wait({ dependencies, signal });
+  // The hold is the one await here that a disconnect can land in. Without this
+  // the handler carries on for a client that has gone, and can record a local
+  // refusal against what was really a cancel.
+  signal.throwIfAborted();
 }
 
 const server = http.createServer((request, response) => {

@@ -34,7 +34,7 @@ the same command.
 
 ```text
 Install Codex Router from:
-https://github.com/duolahypercho/codex-router
+https://github.com/AmayaKuro/codex-router
 
 Follow AGENTS.md. Preserve all of my existing Codex settings and ChatGPT login.
 Use only the provider authentication I choose, safely migrate recognized older
@@ -50,7 +50,7 @@ definition stores the checkout's absolute path.
 macOS or Linux:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -58,20 +58,20 @@ Windows PowerShell:
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
 Clone-and-review installation is also supported:
 
 ```sh
-git clone https://github.com/duolahypercho/codex-router.git
+git clone https://github.com/AmayaKuro/codex-router.git
 cd codex-router
 ./install.sh --target codex --guided --with-tray
 ```
 
 ```powershell
-git clone https://github.com/duolahypercho/codex-router.git
+git clone https://github.com/AmayaKuro/codex-router.git
 Set-Location codex-router
 ./install.ps1 -Target codex -Guided -WithTray
 ```

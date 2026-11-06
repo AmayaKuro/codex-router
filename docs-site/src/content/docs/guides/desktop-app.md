@@ -54,7 +54,7 @@ the window.
 .\codex-router.ps1 tray install
 ```
 
-[Download the latest Windows or Linux desktop package](https://github.com/duolahypercho/codex-router/releases/latest).
+[Download the latest Windows or Linux desktop package](https://github.com/AmayaKuro/codex-router/releases/latest).
 Tagged releases provide unsigned tester packages for this unified application
 family: `model-router-<version>-windows-x64.exe` and
 `model-router-<version>-linux-x64.tar.gz` (containing the executable AppImage).

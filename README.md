@@ -54,7 +54,7 @@ explicitly requested and consume the selected provider's quota.
 **macOS / Linux — Terminal**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -62,7 +62,7 @@ curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/ins
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
@@ -75,6 +75,9 @@ To inspect the installer first, clone the repository and run the local
 installer. See [installation, proxy configuration, and migration](docs/INSTALL.md).
 
 ### Homebrew — router and CLI only
+
+The current formula installs an upstream release. Use the guided source
+installation above to install the AmayaKuro fork.
 
 ```sh
 brew tap duolahypercho/codex-router https://github.com/duolahypercho/codex-router
@@ -107,7 +110,7 @@ visibility before reinstalling. See
 A native GPT model additionally requires a usable ChatGPT login.
 
 For agent-assisted installation, give your agent the repository link and ask
-it to follow [AGENTS.md](https://github.com/duolahypercho/codex-router/blob/main/AGENTS.md), preserve existing settings and login,
+it to follow [AGENTS.md](https://github.com/AmayaKuro/codex-router/blob/main/AGENTS.md), preserve existing settings and login,
 use only your chosen providers, run the doctor, and leave the final Codex
 restart to you.
 
@@ -140,7 +143,7 @@ On Windows, replace `./bin/model-router codex` with
 
 See [providers, authentication, and curation](docs/PROVIDERS.md),
 [Codex modes and optional features](docs/CODEX.md), and the
-[model registry](https://github.com/duolahypercho/codex-router/tree/main/config/).
+[model registry](https://github.com/AmayaKuro/codex-router/tree/main/config/).
 
 ### Free Auto (`free/auto`)
 

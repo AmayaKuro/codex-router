@@ -6,7 +6,7 @@ Paste this into a Codex task:
 
 ```text
 Install the router from this public repository:
-https://github.com/duolahypercho/codex-router
+https://github.com/AmayaKuro/codex-router
 
 Follow AGENTS.md. Preserve my existing Codex models, profiles, settings, and
 ChatGPT login. Use only the provider authentication I choose, safely migrate

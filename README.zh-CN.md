@@ -49,7 +49,7 @@ Windows 和 Linux 使用 Electron 窗口与托盘。
 **macOS / Linux — 终端**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/ins
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
@@ -69,6 +69,8 @@ macOS 未安装完整 Xcode 时，安装器会给出提示并跳过桌面配套�
 详见[安装、代理配置与迁移](docs/zh-CN/INSTALL.md)。
 
 ### Homebrew — 仅 Router 与 CLI
+
+当前配方安装的是上游发布版本。安装 AmayaKuro 分支请使用上面的引导式源码安装。
 
 ```sh
 brew tap duolahypercho/codex-router https://github.com/duolahypercho/codex-router
@@ -97,7 +99,7 @@ Homebrew 提供 Router 与 CLI；桌面配套应用通过源码安装器安装�
 不要立即重装。详见[模型菜单缺少外部模型](docs/zh-CN/TROUBLESHOOTING.md#external-models-are-missing-from-the-picker)。
 原生 GPT 模型还需要可用的 ChatGPT 登录。
 
-如需让代理协助安装，把仓库链接交给它，并要求它遵循 [AGENTS.md](https://github.com/duolahypercho/codex-router/blob/main/AGENTS.md)，
+如需让代理协助安装，把仓库链接交给它，并要求它遵循 [AGENTS.md](https://github.com/AmayaKuro/codex-router/blob/main/AGENTS.md)，
 保留现有设置和登录，只使用你选择的供应商，运行诊断，
 最后由你自己重启 Codex。
 
@@ -126,7 +128,7 @@ Windows 将 `./bin/model-router codex` 替换为 `.\model-router.ps1 codex`。
   可选的原生模型重定向与免登录模式会改变这一行为。
 
 详见[供应商、认证与模型选择](docs/zh-CN/PROVIDERS.md)、
-[Codex 模式与可选功能](docs/zh-CN/CODEX.md)以及[模型注册表](https://github.com/duolahypercho/codex-router/tree/main/config/)。
+[Codex 模式与可选功能](docs/zh-CN/CODEX.md)以及[模型注册表](https://github.com/AmayaKuro/codex-router/tree/main/config/)。
 
 ### Free Auto（`free/auto`）
 

@@ -1,0 +1,1 @@
+- **Source installations now default to AmayaKuro/codex-router.** Both bootstrap installers and the updater recognize fork checkouts over HTTPS and SSH while retaining explicit repository overrides and existing upstream checkouts. The documentation site uses the fork's source installer, and Homebrew instructions identify the existing formula as an upstream release.

@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
-const githubUrl = "https://github.com/duolahypercho/codex-router";
+const githubUrl = "https://github.com/AmayaKuro/codex-router";
 
 export default defineConfig({
   output: "static",

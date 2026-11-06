@@ -59,7 +59,7 @@ Windows 的应用托盘任务和 Router 服务任务分别管理。主动 Quit �
 
 ## 发布包
 
-[版本页面](https://github.com/duolahypercho/codex-router/releases)提供源码、校验和及可用的桌面包。Windows/Linux 桌面包使用匹配的 Router 版本；Linux 先解开归档，再运行其中保留执行权限的 AppImage。
+[版本页面](https://github.com/AmayaKuro/codex-router/releases)提供源码、校验和及可用的桌面包。Windows/Linux 桌面包使用匹配的 Router 版本；Linux 先解开归档，再运行其中保留执行权限的 AppImage。
 
 macOS 的预构建包按固定 Developer ID、校验和、Gatekeeper 及源码指纹检查。签名包不可用或源码不匹配时，支持的路径会转向本地 Xcode 构建。CI 产物对应其构建提交，用于验证该版本。
 

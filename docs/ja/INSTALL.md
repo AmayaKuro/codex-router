@@ -17,7 +17,7 @@ Windows は PowerShell の `FullLanguage` と `Add-Type` を許可するポリ�
 macOS/Linux のターミナルで実行します。
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -25,7 +25,7 @@ Windows は PowerShell で実行します。
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
@@ -36,6 +36,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex
 <a id="homebrew-router-and-cli-only"></a>
 
 ## Homebrew
+
+現在の formula は上流のリリースをインストールします。AmayaKuro フォークには、上記のソースインストーラーを使ってください。
 
 Router と CLI をインストールします。デスクトップアプリを使う場合は上記のソースインストーラーを選びます。
 

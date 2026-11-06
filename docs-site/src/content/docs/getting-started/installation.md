@@ -10,7 +10,7 @@ tray/menu-bar app + macOS desktop widget**.
 Copy and paste this into Terminal:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -20,7 +20,7 @@ Copy and paste this into PowerShell:
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 

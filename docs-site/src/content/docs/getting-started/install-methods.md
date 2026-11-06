@@ -4,8 +4,11 @@ description: "Homebrew, the guided installer, manual checkouts, and npm status."
 ---
 ## Homebrew (macOS or Linux)
 
+The current formula installs an upstream release. To install the AmayaKuro
+fork, use the [guided source installer](/getting-started/installation/).
+
 Codex Router is not in `homebrew/core` yet, so `brew install codex-router` by
-itself does not work. For now, add this repository as a tap once:
+itself does not work. Add the upstream repository as a tap once:
 
 ```sh
 brew tap duolahypercho/codex-router https://github.com/duolahypercho/codex-router
@@ -71,7 +74,7 @@ source. The release workflow generates `Formula/codex-router.rb` from
 `requirements/python.txt` and refreshes it for each release.
 
 Maintainers preparing the eventual `homebrew/core` submission should follow
-[`docs/HOMEBREW_CORE.md`](https://github.com/duolahypercho/codex-router/blob/main/docs/HOMEBREW_CORE.md).
+[`docs/HOMEBREW_CORE.md`](https://github.com/AmayaKuro/codex-router/blob/main/docs/HOMEBREW_CORE.md).
 
 ## npm
 
@@ -85,7 +88,7 @@ Homebrew above; a future npm package should use the scoped name
 macOS or Linux:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided
 ```
 
@@ -93,7 +96,7 @@ Windows PowerShell:
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided
 ```
 

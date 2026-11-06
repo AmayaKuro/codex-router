@@ -59,7 +59,7 @@ Windows のトレイタスクと Router サービスタスクは別々に管理�
 
 ## リリースパッケージ
 
-[リリースページ](https://github.com/duolahypercho/codex-router/releases)でソース、チェックサム、利用可能なデスクトップパッケージを配布します。Windows/Linux のデスクトップパッケージには対応する Router バージョンを使います。Linux はアーカイブを展開し、実行権限を保った AppImage を起動します。
+[リリースページ](https://github.com/AmayaKuro/codex-router/releases)でソース、チェックサム、利用可能なデスクトップパッケージを配布します。Windows/Linux のデスクトップパッケージには対応する Router バージョンを使います。Linux はアーカイブを展開し、実行権限を保った AppImage を起動します。
 
 macOS のビルド済みパッケージは固定 Developer ID、チェックサム、Gatekeeper、ソース指紋を確認します。署名済みパッケージが使えない場合やソースが異なる場合は、対応する経路でローカル Xcode ビルドに進みます。CI 成果物はそのビルドコミットの確認用です。
 

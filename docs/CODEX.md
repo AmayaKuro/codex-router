@@ -661,7 +661,7 @@ Routed models fall back to other routed models only.
 
 ## Skills for custom models
 
-The installer includes companion skills under [skills/](https://github.com/duolahypercho/codex-router/tree/main/skills/) to explain
+The installer includes companion skills under [skills/](https://github.com/AmayaKuro/codex-router/tree/main/skills/) to explain
 tool naming and the app's thread, browser, and computer-use tools to external
 models. Available app tools and client permissions determine which actions
 the model can perform.

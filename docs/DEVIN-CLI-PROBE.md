@@ -52,7 +52,7 @@ You also need Node.js 22.19 or newer (`node --version`).
 ## Run it
 
 ```sh
-git clone https://github.com/duolahypercho/codex-router
+git clone https://github.com/AmayaKuro/codex-router
 cd codex-router
 npm install
 

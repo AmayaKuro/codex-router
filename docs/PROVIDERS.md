@@ -2,7 +2,7 @@
 
 English · [简体中文](zh-CN/PROVIDERS.md) · [日本語](ja/PROVIDERS.md)
 
-Built-in and locally curated models are defined in the [registry](https://github.com/duolahypercho/codex-router/tree/main/config/)
+Built-in and locally curated models are defined in the [registry](https://github.com/AmayaKuro/codex-router/tree/main/config/)
 and the private user-model overlay. The exact picker list depends on enabled
 providers, usable credentials, account access, compatibility policy, and your
 model selection. Each provider/model route has its own credentials, billing,
@@ -396,7 +396,7 @@ If the Router goes offline during setup, use **Status → Service health → Fix
 in Control Center, then check Router health and return to a known working chat
 model. Fix repairs and restarts the installed Router, so routed chats may be
 interrupted. It does not enable a Decisions client. See the
-[provider and model guide](https://github.com/duolahypercho/codex-router/blob/main/docs-site/src/content/docs/reference/providers-and-models.md)
+[provider and model guide](https://github.com/AmayaKuro/codex-router/blob/main/docs-site/src/content/docs/reference/providers-and-models.md)
 for the general boundary between chat models and tool APIs.
 
 ### opencode (Go subscription and Zen)
@@ -458,7 +458,7 @@ but exposes each live catalog as a separate source. Loading a catalog only
 caches and previews its candidates; models are added to the picker only after
 the operator explicitly selects them.
 
-Model entries are maintained in the [registry](https://github.com/duolahypercho/codex-router/tree/main/config/).
+Model entries are maintained in the [registry](https://github.com/AmayaKuro/codex-router/tree/main/config/).
 Use the installed catalog and curation tools to see the currently available IDs.
 
 `opencode-go` carries the Chat Completions models, `opencode-go-messages` the
@@ -734,7 +734,7 @@ harness or transfer CLI-only AST/context/taste optimizations into the Codex
 app. Codex remains the harness; this router only adapts the model transport and
 preserves Command Code's reported cached-token usage.
 
-Model entries are maintained in the [registry](https://github.com/duolahypercho/codex-router/tree/main/config/).
+Model entries are maintained in the [registry](https://github.com/AmayaKuro/codex-router/tree/main/config/).
 Use the installed catalog and curation tools to see the currently available IDs.
 
 Both entries are one selectable family that shares a single stored key;
@@ -1005,7 +1005,7 @@ report credential presence and source, never the value.
 
 ## Adding providers to the project
 
-The [`config/`](https://github.com/duolahypercho/codex-router/tree/main/config/) registry tree is the validated registry for
+The [`config/`](https://github.com/AmayaKuro/codex-router/tree/main/config/) registry tree is the validated registry for
 provider metadata, picker entries, upstream IDs, API protocols, context limits, request
 profiles, modalities, and credential sources. Tested OpenAI-compatible and
 Anthropic API providers share one credential-isolating forwarder and appear

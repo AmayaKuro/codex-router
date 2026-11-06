@@ -52,7 +52,7 @@ Windows と Linux は Electron ウィンドウとトレイを使います。
 **macOS / Linux — ターミナル**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -60,7 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/ins
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
@@ -72,6 +72,8 @@ macOS でフル版 Xcode が見つからない場合は、デスクトップア�
 [インストール、プロキシ、移行](docs/ja/INSTALL.md)に手順があります。
 
 ### Homebrew — ルーターと CLI
+
+現在の formula は上流のリリースをインストールします。AmayaKuro フォークには、上記のソースインストーラーを使ってください。
 
 ```sh
 brew tap duolahypercho/codex-router https://github.com/duolahypercho/codex-router
@@ -100,7 +102,7 @@ Homebrew では以下の保守操作を `codex-router <command>` で実行し、
 ネイティブ GPT には利用可能な ChatGPT ログインが必要です。
 
 エージェントにインストールを任せる場合はリポジトリのリンクを渡し、
-[AGENTS.md](https://github.com/duolahypercho/codex-router/blob/main/AGENTS.md)に従って
+[AGENTS.md](https://github.com/AmayaKuro/codex-router/blob/main/AGENTS.md)に従って
 既存設定とログインを保ち、選択したプロバイダーを設定し、診断を実行するよう依頼します。
 最後の Codex 再起動は利用者が行います。
 
@@ -129,7 +131,7 @@ Windows の `.\codex-router.ps1 curate-models PROVIDER` で使うモデルを選
   ネイティブリダイレクトとログイン不要モードは、それぞれの設定に従って経路を変更します。
 
 詳しくは[プロバイダーとモデル](docs/ja/PROVIDERS.md)、
-[Codex の設定](docs/ja/CODEX.md)、[モデルレジストリ](https://github.com/duolahypercho/codex-router/tree/main/config/)をご覧ください。
+[Codex の設定](docs/ja/CODEX.md)、[モデルレジストリ](https://github.com/AmayaKuro/codex-router/tree/main/config/)をご覧ください。
 
 ### Free Auto（`free/auto`）
 

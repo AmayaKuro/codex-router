@@ -104,11 +104,10 @@ export function deriveBaseInstructions(modelMessages) {
 // newer schema or models absent from a stale account cache. Preserve the
 // account entry for every slug it lists (first occurrence wins on a
 // duplicate), then append bundled-only entries.
-// FOR me, I just want to have usable models in the picker  
 export function mergeNativeCatalogs(
   accountCatalog,
   bundledCatalog,
-  { includeBundledOnly = !validNativeCatalog(accountCatalog) } = {},
+  { includeBundledOnly = true } = {},
 ) {
   const account = validNativeCatalog(accountCatalog) ? accountCatalog.models : [];
   const fallback = validNativeCatalog(bundledCatalog) ? bundledCatalog.models : [];
@@ -326,7 +325,6 @@ function captureNative(cache) {
     ...(capturedWith ? { captured_with: capturedWith } : {}),
     ...(sourceFingerprint ? { native_source_fingerprint: sourceFingerprint } : {}),
     ...(binaryFingerprint ? { native_binary_fingerprint: binaryFingerprint } : {}),
-    native_catalog_policy: "account-availability",
     models: parsed.models,
   });
   return parsed;
@@ -344,10 +342,6 @@ export function nativeCatalogIsReusable(
   currentBinaryFingerprint = undefined,
 ) {
   if (!parsed || !Array.isArray(parsed.models) || parsed.models.length === 0) {
-    return false;
-  }
-  // Rebuild older captures that appended models unavailable to the account.
-  if (currentSourceFingerprint && parsed.native_catalog_policy !== "account-availability") {
     return false;
   }
   if (currentVersion && parsed.captured_with !== currentVersion) return false;

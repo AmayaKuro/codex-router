@@ -128,7 +128,7 @@ serialized context bytes, while provider-billed token counts remain the
 authoritative cost measurement.
 
 For a reproducible provider-reported A/B, see
-[`docs/tool-result-aging-benchmark.md`](https://github.com/duolahypercho/codex-router/blob/main/docs/tool-result-aging-benchmark.md).
+[`docs/tool-result-aging-benchmark.md`](https://github.com/AmayaKuro/codex-router/blob/main/docs/tool-result-aging-benchmark.md).
 
 The integration preserves the built-in OpenAI provider, native GPT models,
 ChatGPT sign-in, profiles, MCP settings, project trust, and reasoning defaults.

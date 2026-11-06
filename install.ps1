@@ -72,7 +72,7 @@ $PreviousRevision = $null
 $RepositoryUrl = if ($env:CODEX_ROUTER_REPOSITORY_URL) {
   $env:CODEX_ROUTER_REPOSITORY_URL
 } else {
-  "https://github.com/duolahypercho/codex-router.git"
+  "https://github.com/AmayaKuro/codex-router.git"
 }
 
 function Assert-Command([string]$Name, [string]$Help) {
@@ -149,6 +149,9 @@ if (-not $CheckoutInstall) {
       $Origin = (& git -C $InstallDir remote get-url origin).Trim()
       $AllowedOrigins = @(
         $RepositoryUrl,
+        "https://github.com/AmayaKuro/codex-router",
+        "https://github.com/AmayaKuro/codex-router.git",
+        "git@github.com:AmayaKuro/codex-router.git",
         "https://github.com/duolahypercho/codex-router",
         "https://github.com/duolahypercho/codex-router.git",
         "git@github.com:duolahypercho/codex-router.git"

@@ -17,7 +17,7 @@ Windows 需要 PowerShell `FullLanguage` 模式及允许 `Add-Type` 的系统策
 macOS/Linux 在终端执行：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.sh \
+curl -fsSL https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.sh \
   | sh -s -- --target codex --guided --with-tray
 ```
 
@@ -25,7 +25,7 @@ Windows 在 PowerShell 执行：
 
 ```powershell
 $installer = Join-Path $env:TEMP "codex-router-install.ps1"
-Invoke-WebRequest https://raw.githubusercontent.com/duolahypercho/codex-router/main/install.ps1 -OutFile $installer
+Invoke-WebRequest https://raw.githubusercontent.com/AmayaKuro/codex-router/main/install.ps1 -OutFile $installer
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex -Guided -WithTray
 ```
 
@@ -36,6 +36,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Target codex
 <a id="homebrew-router-and-cli-only"></a>
 
 ## Homebrew
+
+当前配方安装的是上游发布版本。安装 AmayaKuro 分支请使用上面的源码安装方式。
 
 Homebrew 安装 Router 与 CLI。需要桌面配套应用时使用上面的源码安装方式。
 

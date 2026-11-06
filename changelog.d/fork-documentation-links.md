@@ -1,0 +1,1 @@
+- **Documentation source links now point to AmayaKuro/codex-router.** Update the READMEs, translated guides, and documentation site while preserving historical upstream issue and pull request references, upstream distribution links, and security reporting destinations.

@@ -110,7 +110,7 @@ Registered external routes distinguish the public picker slug, an internal
 gateway ID where needed, and the upstream model ID. For example,
 `deepseek/deepseek-v4-pro` is the public slug while `deepseek-v4-pro` is
 the upstream ID. Direct Responses routes do not need a gateway hop.
-The [registry](https://github.com/duolahypercho/codex-router/tree/main/config/)
+The [registry](https://github.com/AmayaKuro/codex-router/tree/main/config/)
 is the source of current mappings; the [provider guide](PROVIDERS.md) explains
 authentication and local curation.
 

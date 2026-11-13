@@ -247,6 +247,13 @@ test("generic discovery stays non-authoritative and curation stores only explici
       {
         id: "vendor/model-a",
         context_length: 200_000,
+        thinking_levels: ["low", "medium", "high"],
+        supported_reasoning_efforts: ["low", "medium", "high"],
+        supported_reasoning_levels: [
+          { effort: "low", description: "Quick thought" },
+          { effort: "medium", description: "Balanced thought" },
+          { effort: "high", description: "Deep thought" },
+        ],
         requestProfile: "qwen-plan",
       },
       {
@@ -274,6 +281,8 @@ test("generic discovery stays non-authoritative and curation stores only explici
       "vendor/model-b": 400_000,
     });
     assert.ok(discovered.modelMetadata.every((model) => model.requestProfile === undefined));
+    assert.deepEqual(discovered.modelMetadata.find((model) => model.upstreamId === "vendor/model-a").reasoningLevels,
+      fixture.data[0].supported_reasoning_levels);
     assert.equal(JSON.stringify(discovered).includes("private-runtime-chat"), false);
 
     const curation = spawnSync(
@@ -299,6 +308,21 @@ test("generic discovery stays non-authoritative and curation stores only explici
     ]);
     assert.ok(stored.every((model) => model.requestProfile === "codex-encrypted-schema"));
     assert.deepEqual(stored.map((model) => model.contextWindow), [200_000, 400_000]);
+    assert.deepEqual(stored[0].reasoningLevels, fixture.data[0].supported_reasoning_levels);
+    assert.equal(stored[0].defaultEffort, "high");
+    assert.deepEqual(stored[1].reasoningLevels, [{ effort: "high", description: "Adaptive reasoning" }]);
+    assert.match(stored[0].description, /context window and reasoning efforts as advertised/);
+    const published = runJson(`
+      const { MODEL_BY_SLUG } = await import("./src/model-registry.mjs");
+      const { routedModel } = await import("./src/catalog.mjs");
+      const model = routedModel({}, MODEL_BY_SLUG.get("runtime-chat/vendor/model-a"));
+      process.stdout.write(JSON.stringify({
+        levels: model.supported_reasoning_levels,
+        defaultEffort: model.default_reasoning_level,
+      }));
+    `, env);
+    assert.deepEqual(published.levels, fixture.data[0].supported_reasoning_levels);
+    assert.equal(published.defaultEffort, "high");
 
     const untrustedProfile = spawnSync(
       process.execPath,

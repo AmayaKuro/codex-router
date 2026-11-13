@@ -376,6 +376,23 @@ test("one malformed metadata record invalidates the whole untrusted snapshot", a
   await forgetProviderCatalogCache("metadata-provider");
 });
 
+test("cached reasoning levels retain the picker ladder and descriptions", async () => {
+  const reasoningLevels = [
+    { effort: "low", description: "Quick response" },
+    { effort: "medium", description: "Balanced response" },
+    { effort: "high", description: "Deep thought" },
+  ];
+  await writeProviderCatalogCache("reasoning-provider", {
+    discovered: ["reasoner"],
+    modelMetadata: { reasoner: { upstreamId: "reasoner", supportsReasoning: true, reasoningLevels } },
+  });
+  assert.deepEqual(
+    readProviderCatalogCache("reasoning-provider").modelMetadata.reasoner.reasoningLevels,
+    reasoningLevels,
+  );
+  await forgetProviderCatalogCache("reasoning-provider");
+});
+
 test("a cached provider request profile is rejected as untrusted wire authority", async () => {
   await forgetProviderCatalogCache("profile-provider");
   writeFileSync(cachePath, `${JSON.stringify({

@@ -135,7 +135,7 @@ const AUTO_COMPACT_RATIO = 0.85;
 // The picker text for an entry whose sizing or modalities came from the
 // provider's own catalog rather than a documented table or the default.
 export function advertisedModelDescription(providerId, fields) {
-  const named = fields.length === 2 ? `${fields[0]} and ${fields[1]}` : fields[0];
+  const named = new Intl.ListFormat("en").format(fields);
   return `User-curated ${providerId} model; ${named} as advertised by the provider's catalog at curation time.`;
 }
 
@@ -534,6 +534,9 @@ async function main() {
   // documented OpenCode exceptions whose catalog records omit their size.
   // Existing curated entries are never touched.
   const interactive = interactiveSelection && Boolean(process.stdin.isTTY);
+  const discoveredMetadata = new Map(
+    (discovery.modelMetadata || []).map((model) => [model.upstreamId, model]),
+  );
 
   const metadataFor = (id) => {
     const metadata = {
@@ -547,12 +550,14 @@ async function main() {
     const documented = documentedSizing(providerId, id);
     const sizing = advertised || documented;
     if (sizing) Object.assign(metadata, sizing);
-    // OpenCode publishes an effort ladder per free id where the route has one,
-    // and the id-only Zen catalog carries none -- so without this every free
-    // model ships the single conservative `high` level whatever it supports
-    // (#352). An explicit --efforts is the operator speaking and still wins.
+    const advertisedEfforts = discoveredMetadata.get(id)?.reasoningLevels;
     const documentedEfforts = curatedModelReasoningLevels(providerId, id);
-    if (!flagEfforts && documentedEfforts) {
+    let usesAdvertisedEfforts = !flagEfforts && Boolean(advertisedEfforts?.length);
+    if (usesAdvertisedEfforts) {
+      Object.assign(metadata, parseEfforts(advertisedEfforts.map((level) => level.effort).join(",")), {
+        reasoningLevels: advertisedEfforts,
+      });
+    } else if (!flagEfforts && documentedEfforts) {
       Object.assign(metadata, parseEfforts(documentedEfforts.join(",")) || {});
     }
     // Zen's /models catalog publishes ids only, so image input has to come
@@ -581,7 +586,7 @@ async function main() {
     // its values are real and which are still defaults. The live catalog's own
     // figure needs no note; it is first-hand and already labeled "advertised".
     let omitContextNote = Boolean(advertised);
-    let omitReasoningNote = Boolean(flagEfforts);
+    let omitReasoningNote = Boolean(flagEfforts) || usesAdvertisedEfforts;
     let modalitiesOverridden = false;
     const describe = () => {
       if (!documented && !documentedEfforts) {
@@ -591,6 +596,7 @@ async function main() {
         const advertisedFields = [
           advertised ? "context window" : undefined,
           !modalitiesOverridden && advertisedModalities.length > 0 ? "input modalities" : undefined,
+          usesAdvertisedEfforts ? "reasoning efforts" : undefined,
         ].filter(Boolean);
         if (advertisedFields.length > 0) {
           metadata.description = advertisedModelDescription(providerId, advertisedFields);
@@ -633,12 +639,13 @@ async function main() {
       const rawEfforts = promptLine(
         "  Reasoning efforts, comma-separated from " +
           `${Object.keys(EFFORT_DESCRIPTIONS).join(",")} [${ladder}${
-            documentedEfforts ? ", documented" : ""
+            usesAdvertisedEfforts ? ", advertised" : documentedEfforts ? ", documented" : ""
           }]`,
       ).trim();
       if (rawEfforts) {
         Object.assign(metadata, parseEfforts(rawEfforts) || {});
         omitReasoningNote = true;
+        usesAdvertisedEfforts = false;
       }
     }
     describe();

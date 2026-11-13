@@ -1,0 +1,1 @@
+- **Locally curated models use clean names in model pickers.** New entries no longer append `(curated)` to their display names, and existing default labels are cleaned when read. Custom labels and official model names are preserved.

@@ -3,6 +3,7 @@
 // input, and native GPT metadata remains owned by Codex itself.
 
 import { requestProfileKnown } from "./request-profiles.mjs";
+import { EFFORT_LADDER } from "./effort-ladder.mjs";
 
 const MODALITIES = new Set(["text", "image", "audio", "video", "file"]);
 const MAX_CONTEXT_WINDOW = 16_777_216;
@@ -27,6 +28,7 @@ export const MODEL_METADATA_FIELDS = Object.freeze([
   "outputModalities",
   "supportsTools",
   "supportsReasoning",
+  "reasoningLevels",
   "supportsVision",
   "supportsSearch",
   "cost",
@@ -76,6 +78,26 @@ function normalizeModalities(value, field) {
 function normalizeBoolean(value, field) {
   if (typeof value !== "boolean") throw new Error(`${field} must be a boolean.`);
   return value;
+}
+
+function normalizeReasoningLevels(value) {
+  if (!Array.isArray(value)) throw new Error("reasoningLevels must be an array.");
+  const levels = new Map();
+  for (const level of value) {
+    const raw = typeof level === "string" ? level : level?.effort;
+    const effort = typeof raw === "string" ? raw.trim().toLowerCase() : undefined;
+    if (!EFFORT_LADDER.includes(effort)) {
+      throw new Error("reasoningLevels contains an unsupported effort.");
+    }
+    const description = typeof level?.description === "string" && level.description.trim()
+      ? level.description.trim()
+      : effort;
+    if (description.length > MAX_DISPLAY_NAME_LENGTH) {
+      throw new Error("reasoningLevels descriptions must be at most 240 characters.");
+    }
+    if (!levels.has(effort)) levels.set(effort, { effort, description });
+  }
+  return EFFORT_LADDER.filter((effort) => levels.has(effort)).map((effort) => levels.get(effort));
 }
 
 function normalizeCost(value) {
@@ -129,6 +151,7 @@ export function normalizeModelMetadata(value, { upstreamId } = {}) {
   for (const field of ["supportsTools", "supportsReasoning", "supportsVision", "supportsSearch"]) {
     if (has(value, field)) result[field] = normalizeBoolean(value[field], field);
   }
+  if (has(value, "reasoningLevels")) result.reasoningLevels = normalizeReasoningLevels(value.reasoningLevels);
   if (has(value, "cost")) result.cost = normalizeCost(value.cost);
   if (has(value, "requestProfile")) result.requestProfile = normalizeRequestProfile(value.requestProfile);
   return result;
@@ -200,7 +223,18 @@ export function modelMetadataFromProviderRecord(record, { trusted = false } = {}
   const reasoning = boolFrom(record, ["supports_reasoning", "supportsReasoning"])
     ?? boolFrom(capabilities, ["supports_reasoning", "supportsReasoning"])
     ?? (typeof capabilities.reasoning === "boolean" ? capabilities.reasoning : undefined);
+  const reasoningLevels = first(record, [
+    "supported_reasoning_levels", "supported_reasoning_efforts", "thinking_levels", "reasoningLevels",
+  ]);
+  // Codex cannot display off-ladder efforts such as the provider's "none".
+  if (reasoningLevels !== undefined) metadata.reasoningLevels = Array.isArray(reasoningLevels)
+    ? reasoningLevels.filter((level) => {
+        const effort = typeof level === "string" ? level : level?.effort;
+        return typeof effort === "string" && EFFORT_LADDER.includes(effort.trim().toLowerCase());
+      })
+    : reasoningLevels;
   if (reasoning !== undefined) metadata.supportsReasoning = reasoning;
+  else if (Array.isArray(metadata.reasoningLevels)) metadata.supportsReasoning = metadata.reasoningLevels.length > 0;
   const vision = boolFrom(record, ["supports_vision", "supportsVision"])
     ?? boolFrom(capabilities, ["supports_vision", "supportsVision"]);
   if (vision !== undefined) metadata.supportsVision = vision;
@@ -242,6 +276,7 @@ export function modelMetadataFromPreset(model) {
     ...(model.outputModalities ? { outputModalities: model.outputModalities } : {}),
     ...(model.supportsTools !== undefined ? { supportsTools: model.supportsTools } : {}),
     ...(model.supportsReasoning !== undefined ? { supportsReasoning: model.supportsReasoning } : {}),
+    ...(model.reasoningLevels !== undefined ? { reasoningLevels: model.reasoningLevels } : {}),
     ...(model.supportsVision !== undefined ? { supportsVision: model.supportsVision } : {}),
     ...(model.supportsSearch !== undefined ? { supportsSearch: model.supportsSearch } : {}),
     ...(model.searchTool !== undefined ? { supportsSearch: true } : {}),

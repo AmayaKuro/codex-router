@@ -967,6 +967,58 @@ test("scripted curation stores the advertised window, not the conservative guess
   }
 });
 
+test("scripted curation adopts reasoning aliases while preserving explicit and existing choices", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "curate-models-reasoning-"));
+  const file = path.join(dir, "user-models.json");
+  const fixture = path.join(dir, "models.json");
+  const records = [
+    { id: "vendor/efforts", supported_reasoning_efforts: ["medium", "low"] },
+    { id: "vendor/thinking", thinking_levels: ["high", "low", "medium"] },
+    { id: "vendor/empty", thinking_levels: [] },
+    { id: "vendor/override", supported_reasoning_levels: [{ effort: "high", description: "Deep thought" }] },
+  ];
+  const env = {
+    ...process.env,
+    CODEX_HOME: path.join(dir, "codex"),
+    MODEL_ROUTER_STATE_DIR: dir,
+    MODEL_ROUTER_USER_MODELS: file,
+    MODEL_ROUTER_MODEL_PICKER_STATE: path.join(dir, "model-picker.json"),
+    OPENROUTER_API_KEY: "",
+  };
+  const run = (ids, ...flags) => spawnSync(process.execPath, [
+    "src/curate-models.mjs", "openrouter", "--fixture", fixture, "--models", ids, "--no-apply", ...flags,
+  ], { cwd: root, encoding: "utf8", env });
+  writeFileSync(fixture, JSON.stringify({ data: records }));
+  try {
+    const first = run("vendor/efforts,vendor/thinking,vendor/empty");
+    assert.equal(first.status, 0, first.stderr);
+    const stored = JSON.parse(readFileSync(file, "utf8")).models;
+    const efforts = stored.find((model) => model.upstreamModel === "vendor/efforts");
+    assert.deepEqual(efforts.reasoningLevels, [
+      { effort: "low", description: "low" },
+      { effort: "medium", description: "medium" },
+    ]);
+    assert.equal(efforts.defaultEffort, "medium");
+    const thinking = stored.find((model) => model.upstreamModel === "vendor/thinking");
+    assert.deepEqual(thinking.reasoningLevels.map((level) => level.effort), ["low", "medium", "high"]);
+    assert.equal(thinking.defaultEffort, "high");
+    const empty = stored.find((model) => model.upstreamModel === "vendor/empty");
+    assert.deepEqual(empty.reasoningLevels, [{ effort: "high", description: "Adaptive reasoning" }]);
+
+    records[0].supported_reasoning_efforts = ["high"];
+    writeFileSync(fixture, JSON.stringify({ data: records }));
+    const second = run("vendor/override,vendor/efforts", "--efforts", "low");
+    assert.equal(second.status, 0, second.stderr);
+    const updated = JSON.parse(readFileSync(file, "utf8")).models;
+    assert.deepEqual(updated.find((model) => model.upstreamModel === "vendor/efforts"), efforts);
+    const override = updated.find((model) => model.upstreamModel === "vendor/override");
+    assert.deepEqual(override.reasoningLevels, [{ effort: "low", description: "Quick reasoning" }]);
+    assert.equal(override.defaultEffort, "low");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("OpenCode Free curation migrates Muse to Responses", () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "curate-opencode-free-protocol-"));
   const file = path.join(dir, "user-models.json");

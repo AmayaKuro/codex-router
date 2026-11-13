@@ -8,7 +8,9 @@ import {
   CONSERVATIVE_MODEL_DEFAULTS,
   mergeModelMetadata,
   mergeDiscoveredModels,
+  modelMetadataFromPreset,
   modelMetadataFromProviderRecord,
+  normalizeModelMetadata,
 } from "../src/model-capabilities.mjs";
 const { discoverProviderModels } = await import("../src/model-discovery.mjs");
 
@@ -61,6 +63,66 @@ test("metadata precedence is user, verified, live, then conservative defaults", 
   assert.equal(merged.contextWindow, 262_144);
   assert.equal(merged.supportsVision, false);
   assert.equal(merged.supportsTools, CONSERVATIVE_MODEL_DEFAULTS.supportsTools);
+});
+
+test("provider reasoning aliases normalize into the ordered picker ladder", () => {
+  const reasoningLevels = ["low", "medium", "high"].map((effort) => ({ effort, description: effort }));
+  for (const field of ["thinking_levels", "supported_reasoning_efforts", "supported_reasoning_levels"]) {
+    const metadata = modelMetadataFromProviderRecord({
+      id: "vendor/reasoner",
+      [field]: field === "supported_reasoning_levels" ? reasoningLevels : [" HIGH ", "low", "medium", "low"],
+    });
+    assert.deepEqual(metadata.reasoningLevels, reasoningLevels);
+    assert.equal(metadata.supportsReasoning, true);
+    assert.deepEqual(
+      mergeDiscoveredModels({ live: [metadata] })[0].reasoningLevels,
+      reasoningLevels,
+      "canonical metadata must survive the discovery merge",
+    );
+  }
+  assert.deepEqual(modelMetadataFromProviderRecord({
+    id: "vendor/reasoner",
+    thinking_levels: ["low", "medium", "high"],
+    supported_reasoning_efforts: ["low", "high"],
+    supported_reasoning_levels: [{ effort: "high", description: "Deep thought" }],
+  }).reasoningLevels, [{ effort: "high", description: "Deep thought" }]);
+});
+
+test("reasoning metadata preserves user and preset precedence over live levels", () => {
+  const preset = modelMetadataFromPreset({
+    upstreamModel: "vendor/reasoner",
+    reasoningLevels: [{ effort: "medium", description: "Verified medium" }],
+  });
+  const user = modelMetadataFromPreset({
+    upstreamModel: "vendor/reasoner",
+    reasoningLevels: [{ effort: "low", description: "My choice" }],
+  });
+  const [merged] = mergeDiscoveredModels({
+    live: [{ id: "vendor/reasoner", thinking_levels: ["high"] }],
+    verifiedPresets: [preset],
+    userOverrides: [user],
+  });
+  assert.deepEqual(merged.reasoningLevels, user.reasoningLevels);
+  assert.deepEqual(mergeDiscoveredModels({
+    live: [{ id: "vendor/reasoner", thinking_levels: ["high"] }],
+    verifiedPresets: [preset],
+  })[0].reasoningLevels, preset.reasoningLevels);
+});
+
+test("missing and invalid reasoning levels never invent picker options", () => {
+  assert.equal(modelMetadataFromProviderRecord({ id: "vendor/plain" }).reasoningLevels, undefined);
+  const empty = modelMetadataFromProviderRecord({ id: "vendor/plain", supported_reasoning_levels: [] });
+  assert.deepEqual(empty.reasoningLevels, []);
+  assert.equal(empty.supportsReasoning, false);
+  assert.deepEqual(modelMetadataFromProviderRecord({
+    id: "vendor/reasoner", thinking_levels: ["none", "low", "medium", "high", "turbo"],
+  }).reasoningLevels, ["low", "medium", "high"].map((effort) => ({ effort, description: effort })));
+  for (const levels of ["high", [null], [{ effort: 1 }], ["turbo"], [{ effort: "low", description: "x".repeat(241) }]]) {
+    assert.throws(
+      () => normalizeModelMetadata({ upstreamId: "vendor/invalid", reasoningLevels: levels }),
+      /reasoningLevels/,
+    );
+  }
 });
 
 test("invalid live metadata is rejected without weakening valid records", () => {

@@ -39,7 +39,7 @@ test("userModelEntry fills conservative picker metadata", () => {
   assert.deepEqual(entry.inputModalities, ["text"]);
   assert.equal(entry.compHash, "ollama-cloud-gpt-oss-120b-user-v1");
   assert.equal(entry.requiresTrailingUserTurn, undefined);
-  assert.ok(entry.displayName.includes("gpt-oss:120b"));
+  assert.equal(entry.displayName, "gpt-oss:120b");
   assert.ok(entry.description.length > 0);
 });
 
@@ -183,6 +183,16 @@ test("readUserModels accepts a file saved with a UTF-8 byte-order mark", () => {
   ];
   writeFileSync(USER_MODELS_PATH, `﻿${JSON.stringify({ version: 1, models: entries }, null, 2)}\n`);
   assert.deepEqual(readUserModels(), entries);
+});
+
+test("legacy default model labels lose the curated suffix while custom names stay intact", () => {
+  const legacy = userModelEntry({ providerId: "deepseek", upstreamId: "legacy-model", priority: 100 });
+  legacy.displayName = "legacy-model (curated)";
+  const custom = { ...legacy, upstreamModel: "custom-model", displayName: "My Model (curated)" };
+  writeUserModels([legacy, custom]);
+  const [renamed, unchanged] = readUserModels();
+  assert.equal(renamed.displayName, "legacy-model");
+  assert.deepEqual(unchanged, custom);
 });
 
 test("readUserModels returns an empty list when the file is absent or invalid", () => {
@@ -342,10 +352,10 @@ test("registry merges valid user models and skips collisions", async () => {
   assert.equal(slugs.includes("opencode-free/ox-alpha"), false);
   assert.equal(slugs.filter((slug) => slug === "opencode-free/x-preview-f-free").length, 1);
   assert.equal(registry.MODEL_SLUG_ALIASES.has("opencode-free/x-preview-f-free"), false);
-  // Historical user state keeps x-preview-f-free under its opaque id with curated suffix.
+  // Historical user state keeps x-preview-f-free under its opaque id.
   assert.equal(
     registry.MODEL_BY_SLUG.get("opencode-free/x-preview-f-free").displayName,
-    "x-preview-f-free (curated)",
+    "x-preview-f-free",
   );
   assert.equal(registry.MODEL_SLUG_ALIASES.has("deepseek/deepseek-v4-pro"), false);
   assert.equal(registry.MODEL_BY_SLUG.get("deepseek/deepseek-v4-pro").provider, "deepseek");

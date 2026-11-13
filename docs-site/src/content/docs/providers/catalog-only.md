@@ -72,10 +72,13 @@ command when its catalog changes, and verify a curated model with
 tool-driven work.
 
 Curated entries use the context window, image support, and reasoning efforts
-you provide during curation — the context window falling back to the one the
-provider's catalog advertises, and to a conservative default only when it
-advertises none — and are local to your machine. Verify a model before relying
-on it:
+advertised by the provider's catalog as their curation defaults. Reasoning
+efforts can come from `supported_reasoning_levels` (objects with `effort` and
+`description`), `supported_reasoning_efforts`, or `thinking_levels`, in that
+order of preference. Your interactive choices or an explicit `--efforts` take
+priority. Existing curated settings stay unchanged; catalogs that omit these
+fields keep conservative defaults. Curated entries are local to your machine.
+Verify a model before relying on it:
 
 ```sh
 ./bin/test-model 'groq/MODEL_ID' --live --yes

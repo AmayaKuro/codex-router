@@ -135,7 +135,7 @@ export function userModelEntry({ providerId, upstreamId, requestProfile, reasoni
     upstreamModel: upstreamId,
     provider: providerId,
     listed: true,
-    displayName: officialModelDisplayName(providerId, upstreamId) || `${upstreamId} (curated)`,
+    displayName: officialModelDisplayName(providerId, upstreamId) || upstreamId,
     description: defaultUserModelDescription(providerId),
     priority,
     ...defaultUserModelReasoning(),

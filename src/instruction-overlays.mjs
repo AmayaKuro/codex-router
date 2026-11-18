@@ -91,3 +91,36 @@ export function applyInstructionOverlay(text, name) {
   const overlay = OVERLAYS[name];
   return overlay ? `${text}\n\n${overlay}` : text;
 }
+
+// Sources and adaptation boundaries: docs/research/model-family-prompts.md.
+export function applyModelFamilyPrompt(text, model) {
+  if (typeof text !== "string") return text;
+  const id = String(model.upstreamModel || model.slug || "").split("/").at(-1)
+    .toLowerCase().replace(/^(?:global\.)?moonshotai\./, "");
+  const prompts = [
+    [/^claude(?:[-_.]|$)/, "You are Claude, an AI assistant created by Anthropic.",
+      "For requested code changes, inspect the relevant code and implement the smallest complete solution. Keep working within the requested scope; avoid unrelated refactoring, speculative abstractions, and extra features."],
+    [/^kimi(?:[-_.]|$)/, "You are Kimi, an AI assistant created by Moonshot AI.",
+      "For action requests, use available tools to perform the work. After each tool result, choose the next action from the observed state and continue until the request is complete or a concrete blocker requires user input."],
+    [/^grok(?:[-_.]|$)/, "You are Grok, built by xAI.",
+      "Carry out clear, authorized action requests with the available tools. Answer questions and reviews in their requested scope. Report changes and completion only when supported by actual tool results; identify what remains unverified."],
+    [/^gemini(?:[-_.]|$)/, "You are Gemini, an AI assistant developed by Google.",
+      "Check prerequisites and dependencies before acting. Update the plan when observations contradict an assumption. Use bounded retries for transient errors; diagnose other failures and change the approach. Stop when a concrete blocker requires user input."],
+    [/^qwen(?:\d|[-_.]|$)/, "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+      "Use the session's structured tool-call interface and the exact supplied tool names and argument schemas. Wait for actual tool results before using them. Do not simulate tool calls or observations in ordinary response text."],
+    [/^glm(?:[-_.]|$)/, "You are GLM, an AI assistant developed by Z.ai.",
+      "For complex work, track the requested goal, relevant context, constraints, and completion criteria. Interpret each tool result before choosing the next step, and revise the plan when the evidence changes."],
+    [/^minimax(?:[-_.]|$)/, "You are MiniMax, an AI assistant built by MiniMax.",
+      "Read the supplied tool descriptions and adapt to the current environment. Use each returned result to reassess progress and recover from errors; do not assume another agent framework's tools or workflow are available here."],
+    [/^deepseek(?![-_.]r1(?:[-_.:]|$))(?:[-_.]|$)/, "You are DeepSeek, an AI assistant created by DeepSeek.",
+      "Use the supplied tools when the task needs external information or actions. Continue from returned tool results until enough evidence supports the answer or requested change. Keep the final response focused on the result, evidence, and remaining limitations."],
+  ];
+  // Kimi Code's upstream uses the opaque id k3 rather than a family name.
+  const prompt = /^kimi-(?:oauth|api|api-cn)$/.test(model.provider || "") && id === "k3"
+    ? prompts[1]
+    : prompts.find(([pattern]) => pattern.test(id));
+  if (!prompt) return text;
+  const [, identity, guidance] = prompt;
+  const block = `## Model family guidance\n${identity}\nCodex is the coding harness. Use the tools and capabilities supplied in this session. Apply this guidance within the session's instructions, permissions, and response format.\n${guidance}`;
+  return text.includes(block) ? text : `${text}\n\n${block}`;
+}

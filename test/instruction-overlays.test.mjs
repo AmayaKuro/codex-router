@@ -4,9 +4,52 @@ import { test } from "node:test";
 import {
   applyGrokFileToolsOverlay,
   applyInstructionOverlay,
+  applyModelFamilyPrompt,
   grokFileToolsOverlayFor,
 } from "../src/instruction-overlays.mjs";
 import { MODEL_BY_SLUG } from "../src/model-registry.mjs";
+
+test("family prompts add bounded behavioral guidance across custom and reseller providers", () => {
+  for (const [id, expected, behavior] of [
+    ["anthropic/claude-opus-5-5", "Claude", /smallest complete solution.*requested scope/],
+    ["moonshotai/kimi-k3", "Kimi", /After each tool result.*observed state/],
+    ["bro/global.moonshotai.kimi-k3", "Kimi", /After each tool result.*observed state/],
+    ["x-ai/grok-4.7", "Grok", /supported by actual tool results.*unverified/],
+    ["google/gemini-4-argon", "Gemini", /Check prerequisites.*bounded retries for transient errors.*diagnose other failures/],
+    ["Qwen/Qwen3.8-27B", "Qwen", /structured tool-call interface.*exact supplied tool names/],
+    ["z-ai/glm-5.3", "GLM", /completion criteria.*Interpret each tool result/],
+    ["MiniMaxAI/MiniMax-M3", "MiniMax", /adapt to the current environment.*reassess progress/],
+    ["deepseek-ai/deepseek-v4-pro", "DeepSeek", /Continue from returned tool results.*evidence/],
+  ]) {
+    const model = { provider: "custom", slug: "custom/unrelated", upstreamModel: id };
+    const result = applyModelFamilyPrompt("Keep tools and permissions.", model);
+    assert.ok(result.startsWith("Keep tools and permissions.\n\n"));
+    assert.ok(result.includes(`You are ${expected},`), id);
+    assert.match(result, /tools and capabilities supplied in this session/);
+    assert.match(result, /within the session's instructions, permissions, and response format/);
+    assert.match(result, behavior, id);
+    assert.doesNotMatch(result, /<think>|<tool_call>|\/no_think|\/think|Action:|Observation:|reasoning_content|clear_thinking/);
+    assert.equal(applyModelFamilyPrompt(result, model), result);
+  }
+});
+
+test("family detection avoids unknown models, misleading labels, and R1 variants", () => {
+  for (const id of ["opaque-model", "not-claude", "deepseek-r1", "DeepSeek-R1-0528",
+    "deepseek-r1-distill-qwen-32b", "deepseek-r1:free", "qwenish"]) {
+    assert.equal(applyModelFamilyPrompt("Base.", {
+      upstreamModel: id, provider: "anthropic-api", slug: "custom/claude-opus",
+      displayName: "Claude",
+    }), "Base.", id);
+  }
+  assert.equal(applyModelFamilyPrompt(undefined, {}), undefined);
+  assert.match(applyModelFamilyPrompt("Base.", { slug: "custom/kimi-k3" }), /You are Kimi/);
+  assert.match(applyModelFamilyPrompt("Base.", {
+    provider: "kimi-oauth", upstreamModel: "k3",
+  }), /You are Kimi.*After each tool result/s);
+  assert.equal(applyModelFamilyPrompt("Base.", {
+    provider: "custom", upstreamModel: "k3",
+  }), "Base.");
+});
 
 test("Grok 4.6 OAuth distinguishes local files from discovered MCP resources", () => {
   const model = MODEL_BY_SLUG.get("grok-oauth/grok-4.6");

@@ -228,6 +228,24 @@ test("routed models rewrite GPT identity text to the external model name", () =>
   assert.equal(model.multi_agent_version, "v2");
 });
 
+test("family prompts reach both catalog instruction fields without changing the native template", () => {
+  const model = routedModel(template, {
+    ...grok, slug: "custom/claude-opus", provider: "custom",
+    upstreamModel: "anthropic/claude-opus-5-5", displayName: "Claude Opus",
+    instructionOverlay: "filesystem-mcp-discipline",
+  });
+  for (const text of [model.base_instructions, model.model_messages.instructions_template]) {
+    assert.match(text, /You are Claude, an AI assistant created by Anthropic/);
+    assert.match(text, /smallest complete solution/);
+    assert.match(text, /within the session's instructions, permissions, and response format/);
+    assert.match(text, /local filesystem paths as files/);
+    assert.match(text, /based on Claude Opus/);
+  }
+  assert.match(model.model_messages.instructions_template, /\{\{ personality \}\}/);
+  assert.doesNotMatch(template.base_instructions, /Model family guidance/);
+  assert.doesNotMatch(template.model_messages.instructions_template, /Model family guidance/);
+});
+
 test("grok family rewrites workspace reads onto its own tools", () => {
   const workspace = "- When you search for text or files, you reach first for `rg` or `rg --files`; they are much faster than alternatives like `grep`. If `rg` is unavailable, you use the next best tool without fuss.\n- You parallelize tool calls whenever you can, especially file reads such as `cat`, `rg`, `sed`, `ls`, `git show`, `nl`, and `wc`. You use `multi_tool_use.parallel` for that parallelism, and only that. Do not chain shell commands with separators like `echo \"====\";`; the output becomes noisy in a way that makes the user\u2019s side of the conversation worse.\n- Use `apply_patch` for manual code edits. Do not create or edit files with `cat` or other shell write tricks. Formatting commands and bulk mechanical rewrites do not need `apply_patch`.\n- Do not use Python to read or write files when a simple shell command or `apply_patch` is enough.\n- Treat ordinary local filesystem paths as files, never as MCP resource URIs. Inspect local files with a filesystem tool that is present in this request's menu.";
   const native = {
@@ -294,20 +312,22 @@ test("routed models can borrow native behavior instructions without inheriting c
 });
 
 test("routed behavior identity rewriting consumes versioned native GPT names", () => {
-  const behaviorTemplate = {
-    ...template,
-    base_instructions: "You are Codex, an agent based on GPT-5.6-Sol.",
-    model_messages: {
-      instructions_template: "You are Codex, an agent based on GPT-5.6-Sol.",
-    },
-  };
-  const model = routedModel(template, grok, behaviorTemplate);
-
-  assert.match(model.base_instructions, /based on Grok 4\.5\./);
-  assert.doesNotMatch(model.base_instructions, /GPT-5/);
-  assert.doesNotMatch(model.base_instructions, /Grok 4\.5\.6-Sol/);
-  assert.match(model.model_messages.instructions_template, /based on Grok 4\.5\./);
-  assert.doesNotMatch(model.model_messages.instructions_template, /GPT-5/);
+  for (const nativeName of ["GPT-5.6-Sol", "GPT-6", "GPT-6 Luna", "GPT-6.1-Astra", "GPT-5.3-Codex"]) {
+    const behaviorTemplate = {
+      ...template,
+      base_instructions: `You are Codex, an agent based on ${nativeName}. Compare GPT-5 and GPT-6.`,
+      model_messages: {
+        instructions_template: `You are Codex, an agent based on ${nativeName}.`,
+      },
+    };
+    const model = routedModel(template, grok, behaviorTemplate);
+    for (const text of [model.base_instructions, model.model_messages.instructions_template]) {
+      assert.match(text, /based on Grok 4\.5\./, nativeName);
+      assert.doesNotMatch(text, /based on GPT-|Grok 4\.5(?:\.6|-Sol| Luna|\.1-Astra|\.3-Codex)/, nativeName);
+    }
+    assert.match(model.base_instructions, /Compare GPT-5 and GPT-6\./);
+    assert.ok(behaviorTemplate.base_instructions.includes(`based on ${nativeName}.`));
+  }
 });
 
 test("routed models can opt into a concise execution overlay", () => {

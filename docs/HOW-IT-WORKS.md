@@ -119,7 +119,14 @@ current instructions and capability metadata from the installed Codex build.
 Registry models clone a current native schema and replace picker-specific
 metadata. They also rewrite the cloned GPT identity line in
 `base_instructions` / `model_messages.instructions_template` so external models
-do not claim to be based on GPT-5.
+do not claim to be based on the template's GPT model.
+Recognized model families also receive a short identity and behavioral prompt
+in both fields, including models served by custom endpoints. The
+[family prompt research](research/model-family-prompts.md) records the official
+sources, adaptations, and exclusions. Family guidance covers scoped changes,
+tool use, and recovery within the session's instructions and permissions.
+Vendor tool serialization and reasoning controls stay in the serving backend
+and adapters.
 
 The integration deliberately keeps the built-in `openai` provider and points
 it at a loopback `openai_base_url`. This makes named models appear in the normal

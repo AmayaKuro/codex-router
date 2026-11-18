@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { writePrivateFile } from "./file-security.mjs";
 import { isManagedCodexBaseUrl } from "./caller-auth.mjs";
-import { applyInstructionOverlay } from "./instruction-overlays.mjs";
+import { applyInstructionOverlay, applyModelFamilyPrompt } from "./instruction-overlays.mjs";
 import {
   ANNOUNCED_MODELS_PATH,
   CODEX_PROVIDER_MODE_PATH,
@@ -597,10 +597,10 @@ function rewriteIdentity(text, model) {
   const name = identityName(model);
   return text
     .replace(
-      /\b(?:a coding agent|an agent) based on GPT-5(?:\.\d+)?(?:[-\s](?:Sol|Terra|Luna))?\b/gi,
+      /\b(?:a coding agent|an agent) based on GPT-\d+(?:\.\d+)*(?:[-\s](?:Codex|Sol|Terra|Luna|Astra))?\b/gi,
       `a coding agent based on ${name}`,
     )
-    .replace(/\bbased on GPT-5(?:\.\d+)?(?:[-\s](?:Sol|Terra|Luna))?\b/gi, `based on ${name}`);
+    .replace(/\bbased on GPT-\d+(?:\.\d+)*(?:[-\s](?:Codex|Sol|Terra|Luna|Astra))?\b/gi, `based on ${name}`);
 }
 
 function isGrokFamily(model) {
@@ -634,7 +634,10 @@ function rewriteGrokWorkspaceInstructions(text, model) {
 
 function publishRoutedInstructions(text, model) {
   return rewriteGrokWorkspaceInstructions(
-    applyInstructionOverlay(rewriteIdentity(text, model), model.instructionOverlay),
+    applyModelFamilyPrompt(
+      applyInstructionOverlay(rewriteIdentity(text, model), model.instructionOverlay),
+      model,
+    ),
     model,
   );
 }

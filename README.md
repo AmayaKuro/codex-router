@@ -74,6 +74,28 @@ companion with guidance rather than failing the installed router.
 To inspect the installer first, clone the repository and run the local
 installer. See [installation, proxy configuration, and migration](docs/INSTALL.md).
 
+#### Desktop companion setup appears stuck or cannot find Chrome
+
+The desktop companion build runs Playwright renderer tests that need a separate
+Chrome or Chromium executable. If setup appears stuck at those tests or reports
+that no Chromium executable is available, set its path in the same terminal
+before retrying the installer:
+
+```powershell
+$env:CODEX_ROUTER_TEST_CHROMIUM = 'C:\path\to\chrome.exe'
+```
+
+On macOS/Linux:
+
+```sh
+export CODEX_ROUTER_TEST_CHROMIUM="/path/to/chrome"
+```
+
+Replace the example with an existing Chrome or Chromium executable.
+
+To install without the desktop companion, use `-NoTray` (Windows) or `--no-tray`
+(macOS/Linux) instead of the tray flag.
+
 ### Homebrew — router and CLI only
 
 The current formula installs an upstream release. Use the guided source

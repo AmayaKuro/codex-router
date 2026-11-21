@@ -1,0 +1,1 @@
+- **Document how to select Chromium for desktop companion build tests.** The README explains `CODEX_ROUTER_TEST_CHROMIUM`, installing Playwright's Chromium when no browser is available, and the distinction from Electron's bundled runtime.
